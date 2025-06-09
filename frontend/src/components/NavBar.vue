@@ -65,9 +65,9 @@
 </template>
 
 <script>
-import { ref, onMounted, watch,onUnmounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 import AdvancedSearchPanel from './AdvancedSearchPanel.vue'
 
 export default {
@@ -77,38 +77,22 @@ export default {
   },
   setup() {
     const router = useRouter()
-    const user = ref(null)
+    const authStore = useAuthStore()
     const showDropdown = ref(false)
     const showAdvancedSearch = ref(false)
     
-    // 获取当前用户
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await axios.get('/api/user', { withCredentials: true })
-        if (response.data.success) {
-          user.value = response.data.user
-        }
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
-      }
-    }
+    // 使用计算属性获取auth store中的用户
+    const user = computed(() => authStore.user)
 
     // 登出
-    const handleLogout = async () => {
-      try {
-        await axios.post('/api/logout', {}, { withCredentials: true })
-        user.value = null
-        showDropdown.value = false
-        router.push('/login')
-      } catch (error) {
-        console.error('登出失败:', error)
-        alert('登出失败，请重试')
-      }
+    const handleLogout = () => {
+      authStore.logout()
+      showDropdown.value = false
     }
 
     // 导航到聊天页面前检查登录状态
     const navigateToChat = () => {
-      if (user.value) {
+      if (authStore.isAuthenticated) {
         // 已登录，直接导航到聊天页面
         router.push('/chat')
       } else {
@@ -146,13 +130,13 @@ export default {
     }
 
     onMounted(() => {
-      fetchCurrentUser()
       document.addEventListener('click', handleClickOutside)
     })
 
     onUnmounted(() => {
       document.removeEventListener('click', handleClickOutside)
     })
+    
     return {
       user,
       showDropdown,

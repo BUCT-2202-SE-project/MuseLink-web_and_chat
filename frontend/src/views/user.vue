@@ -98,6 +98,7 @@
 
 <script>
 import axios from 'axios';
+import api from '@/utils/api';
 
 export default {
   name: 'UserCenter',
@@ -140,7 +141,7 @@ export default {
   methods: {
     async fetchUserInfo() {
       try {
-        const response = await axios.get('/api/user');
+        const response = await api.get('/user');
         if (response.data.success) {
           this.user = response.data.user;
           // 如果用户有头像，构建头像URL
@@ -160,7 +161,7 @@ export default {
     async fetchLikes() {
       this.likesLoading = true;
       try {
-        const response = await axios.get('/api/user/likes');
+        const response = await api.get('/user/likes');
         if (response.data.success) {
           this.likes = response.data.data;
         }
@@ -173,7 +174,7 @@ export default {
     async fetchCollections() {
       this.collectionsLoading = true;
       try {
-        const response = await axios.get('/api/user/collections');
+        const response = await api.get('/user/collections');
         if (response.data.success) {
           this.collections = response.data.data;
         }
@@ -202,7 +203,7 @@ export default {
       }
 
       try {
-        const response = await axios.post('/api/user/update', {
+        const response = await api.post('/user/update', {
           username: this.user.username,
           email: this.user.email
         });
@@ -230,7 +231,7 @@ export default {
       formData.append('file', file);
 
       try {
-        const response = await axios.post('/api/user/avatar', formData, {
+        const response = await api.post('/user/avatar', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -256,7 +257,7 @@ export default {
     },
     async toggleLike(artifact_id) {
       try {
-        const response = await axios.post('/api/likes/toggle', {
+        const response = await api.post('/likes/toggle', {
           artifact_id: artifact_id
         });
 
@@ -271,7 +272,7 @@ export default {
     },
     async toggleCollect(artifact_id) {
       try {
-        const response = await axios.post('/api/collection/toggle', {
+        const response = await api.post('/collection/toggle', {
           artifact_id: artifact_id
         });
 

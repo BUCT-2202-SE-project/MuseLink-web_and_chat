@@ -105,6 +105,8 @@
 
 <script>
 import OpenSeadragon from 'openseadragon';
+import axios from 'axios';
+import api from '@/utils/api';
 
 export default {
   name: 'ArtifactDetail',
@@ -158,16 +160,9 @@ export default {
       const artifactId = this.$route.query.id;
 
       try {
-        const response = await fetch(`http://172.20.10.3:3200/api/artifact/${artifactId}`, {
-          credentials: 'include' // 包含cookie以获取登录状态
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || '获取文物详情失败');
-        }
-
-        const data = await response.json();
+        // 使用axios替代fetch
+        const response = await api.get(`/artifact/${artifactId}`);
+        const data = response.data;
 
         if (data.success) {
           this.artifact = data.artifact || {};
@@ -244,63 +239,47 @@ export default {
 
     async toggleLike() {
       try {
-        const response = await fetch('http://172.20.10.3:3200/api/likes/toggle', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            artifact_id: this.artifact['Object ID']
-          })
+        // 使用axios实例替代fetch
+        const response = await api.post('/likes/toggle', {
+          artifact_id: this.artifact['Object ID']
         });
 
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          this.isLiked = result.isLiked;
-          this.likeCount = result.likeCount;
-          this.$message.success(result.message);
-        } else if (response.status === 401) {
-          this.$message.warning(result.message || '请先登录');
-          this.$router.push('/login');
+        if (response.data.success) {
+          this.isLiked = response.data.isLiked;
+          this.likeCount = response.data.likeCount;
+          this.$message.success(response.data.message);
         } else {
-          throw new Error(result.message || '操作失败');
+          throw new Error(response.data.message || '操作失败');
         }
       } catch (error) {
         console.error('点赞操作失败:', error);
-        this.$message.error(error.message || '点赞操作失败');
+        // 处理错误但不强制跳转登录，因为拦截器会处理401
+        if (error.response && error.response.status !== 401) {
+          this.$message.error(error.message || '点赞操作失败');
+        }
       }
     },
 
     async toggleCollect() {
       try {
-        const response = await fetch('http://172.20.10.3:3200/api/collection/toggle', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            artifact_id: this.artifact['Object ID']
-          })
+        // 使用axios实例替代fetch
+        const response = await api.post('/collection/toggle', {
+          artifact_id: this.artifact['Object ID']
         });
 
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          this.isCollected = result.isCollected;
-          this.collectCount = result.collectCount;
-          this.$message.success(result.message);
-        } else if (response.status === 401) {
-          this.$message.warning(result.message || '请先登录');
-          this.$router.push('/login');
+        if (response.data.success) {
+          this.isCollected = response.data.isCollected;
+          this.collectCount = response.data.collectCount;
+          this.$message.success(response.data.message);
         } else {
-          throw new Error(result.message || '操作失败');
+          throw new Error(response.data.message || '操作失败');
         }
       } catch (error) {
         console.error('收藏操作失败:', error);
-        this.$message.error(error.message || '收藏操作失败');
+        // 处理错误但不强制跳转登录，因为拦截器会处理401
+        if (error.response && error.response.status !== 401) {
+          this.$message.error(error.message || '收藏操作失败');
+        }
       }
     },
 

@@ -46,12 +46,13 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'LoginPage',
   setup() {
     const router = useRouter()
+    const authStore = useAuthStore()
     const username_or_email = ref('')
     const password = ref('')
     const error = ref('')
@@ -62,15 +63,16 @@ export default {
       loading.value = true
 
       try {
-        const response = await axios.post('/api/login', {
+        const success = await authStore.login({
           username_or_email: username_or_email.value,
           password: password.value
-        }, { withCredentials: true })
+        })
 
-        if (response.data.success) {
-          window.location.href = '/'
+        if (success) {
+          console.log('登录成功，准备跳转到首页')
+          router.push('/')
         } else {
-          error.value = response.data.message || '登录失败'
+          error.value = '登录失败，请检查用户名和密码'
         }
       } catch (err) {
         if (err.response) {
